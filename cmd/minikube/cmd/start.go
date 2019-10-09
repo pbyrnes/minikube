@@ -283,10 +283,7 @@ func runStart(cmd *cobra.Command, args []string) {
 	}
 
 	driver := selectDriver(oldConfig)
-	err = autoSetDriverOptions(driver)
-	if err != nil {
-		glog.Errorf("Error autoSetOptions : %v", err)
-	}
+	autoSetDriverOptions(driver)
 
 	validateFlags(driver)
 	validateUser(driver)
@@ -829,14 +826,15 @@ func setDockerProxy() {
 }
 
 // autoSetDriverOptions sets the options needed for specific vm-driver automatically.
-func autoSetDriverOptions(driver string) error {
+func autoSetDriverOptions(driver string) {
 	if driver == constants.DriverNone {
-		if o := none.AutoOptions(); o != "" {
-			return extraOptions.Set(o)
+		for _, e := range none.AutoOptions() {
+			if value := extraOptions.Get(e.Key, e.Component); value == "" {
+				extraOptions = append(extraOptions, e)
+			}
 		}
 		viper.Set(cacheImages, false)
 	}
-	return nil
 }
 
 // prepareNone prepares the user and host for the joy of the "none" driver

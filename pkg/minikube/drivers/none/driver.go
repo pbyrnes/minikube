@@ -51,11 +51,17 @@ func createNoneHost(config cfg.MachineConfig) interface{} {
 }
 
 // AutoOptions returns suggested extra options based on the current config
-func AutoOptions() string {
+func AutoOptions() cfg.ExtraOptionSlice {
+	var autoOptions cfg.ExtraOptionSlice
 	// for more info see: https://github.com/kubernetes/minikube/issues/3511
 	f := "/run/systemd/resolve/resolv.conf"
-	if _, err := os.Stat(f); err != nil {
-		return ""
+	if _, err := os.Stat(f); err == nil {
+		e := cfg.ExtraOption{
+			Component: "kubelet",
+			Key:       "resolv-conf",
+			Value:     f,
+		}
+		autoOptions = append(autoOptions, e)
 	}
-	return fmt.Sprintf("kubelet.resolv-conf=%s", f)
+	return autoOptions
 }
